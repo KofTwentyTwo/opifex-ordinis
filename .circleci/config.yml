@@ -4,22 +4,22 @@ orbs:
   orb-tools: circleci/orb-tools@12.3
   shellcheck: circleci/shellcheck@3.2
 
-filters: &filters
+branch-only: &branch-only
   tags:
-    only: /.*/
+    ignore: /.*/
 
 workflows:
   lint-pack:
     jobs:
       - orb-tools/lint:
-          filters: *filters
+          filters: *branch-only
       - orb-tools/pack:
-          filters: *filters
+          filters: *branch-only
       - orb-tools/review:
           orb_name: opifex-ordinis
-          filters: *filters
+          filters: *branch-only
       - shellcheck/check:
-          filters: *filters
+          filters: *branch-only
       - orb-tools/continue:
           pipeline_number: << pipeline.number >>
           vcs_type: << pipeline.project.type >>
@@ -29,4 +29,4 @@ workflows:
             - orb-tools/pack
             - orb-tools/review
             - shellcheck/check
-          filters: *filters
+          filters: *branch-only
