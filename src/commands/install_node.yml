@@ -1,0 +1,14 @@
+description: >
+  Install Node.js on the machine executor via NodeSource repository.
+  Used by node_pipeline; also available standalone for custom workflows.
+parameters:
+  version:
+    type: string
+    default: "22"
+    description: Node.js major version to install.
+steps:
+  - run:
+      name: Install Node.js << parameters.version >>
+      environment:
+        PARAM_NODE_VERSION: << parameters.version >>
+      command: << include(scripts/install_node.sh) >>

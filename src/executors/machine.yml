@@ -1,0 +1,15 @@
+description: >
+  Ubuntu machine executor with native Docker support. Uses a machine executor
+  (not Docker) because buildx requires direct Docker daemon access for QEMU
+  emulation and multi-platform builds. Ubuntu 24.04 provides a current Docker
+  engine and buildx plugin out of the box.
+parameters:
+  resource_class:
+    type: string
+    default: large
+    description: >
+      Machine resource class. Use large (default) for Docker builds;
+      medium works for test-only pipelines without Docker.
+machine:
+  image: ubuntu-2404:current
+resource_class: << parameters.resource_class >>

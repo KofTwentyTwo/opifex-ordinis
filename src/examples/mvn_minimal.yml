@@ -1,0 +1,13 @@
+description: >
+  Minimal Java/Maven pipeline. Uses all defaults: Temurin JDK 21, Checkstyle,
+  Maven verify, multi-arch Docker push on main, Gitleaks + OWASP + Trivy.
+  Requires a ghcr context with GHCR_USERNAME and GHCR_TOKEN.
+usage:
+  version: 2.1
+  orbs:
+    oo: kof22/opifex-ordinis@1
+  workflows:
+    default:
+      jobs:
+        - oo/mvn_pipeline:
+            context: ghcr

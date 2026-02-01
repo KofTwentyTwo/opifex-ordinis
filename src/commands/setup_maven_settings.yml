@@ -1,0 +1,8 @@
+description: >
+  Generate Maven settings.xml for CI builds at /tmp/circleci/mvn-settings.xml.
+  Configures GitHub Packages server credentials from environment variables.
+  Requires GITHUB_USERNAME and GITHUB_TOKEN in the CircleCI context.
+steps:
+  - run:
+      name: Setup Maven settings.xml
+      command: << include(scripts/setup_maven_settings.sh) >>

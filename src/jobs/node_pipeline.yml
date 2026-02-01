@@ -1,0 +1,113 @@
+description: >
+  Complete Node.js CI/CD pipeline in a single job. Installs Node.js,
+  runs lint/build/test, then conditionally pushes a multi-arch Docker
+  image to GHCR on deploy branches. Includes Gitleaks and Trivy security
+  scanning. Requires a ghcr context with GHCR_USERNAME and GHCR_TOKEN.
+executor:
+  name: machine
+  resource_class: << parameters.resource_class >>
+parameters:
+  node_version:
+    type: string
+    default: "22"
+    description: Node.js version to install.
+  image_name:
+    type: string
+    default: ""
+    description: >
+      Docker image name (e.g. ghcr.io/org/repo). Defaults to
+      ghcr.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.
+  image_tag:
+    type: string
+    default: ""
+    description: Docker image tag. Defaults to first 7 chars of CIRCLE_SHA1.
+  deploy_branches:
+    type: string
+    default: "main"
+    description: Comma-separated branches that trigger Docker push.
+  push_latest:
+    type: boolean
+    default: true
+    description: Also push the latest tag on the first deploy branch.
+  build_command:
+    type: string
+    default: "npm run build"
+    description: Build command.
+  test_command:
+    type: string
+    default: "npm test"
+    description: Test command.
+  lint_command:
+    type: string
+    default: "npm run lint"
+    description: Lint command.
+  install_playwright:
+    type: boolean
+    default: false
+    description: Install Playwright browsers before tests.
+  docker_platforms:
+    type: string
+    default: "linux/amd64,linux/arm64"
+    description: Buildx target platforms.
+  run_security_scan:
+    type: boolean
+    default: true
+    description: Run Gitleaks + Trivy scans.
+  trivy_severity:
+    type: string
+    default: "CRITICAL,HIGH"
+    description: Trivy severity filter.
+  pre_steps:
+    type: steps
+    default: []
+    description: >
+      Custom steps to run after checkout and dependency installation but
+      before lint/build/test. Use this to set environment variables,
+      install extra tools, or perform any project-specific setup.
+      Variables exported via BASH_ENV are available to all subsequent steps.
+  resource_class:
+    type: string
+    default: large
+    description: Machine resource class.
+steps:
+  # -- Checkout --
+  - full_checkout
+  # -- Install Node.js --
+  - install_node:
+      version: << parameters.node_version >>
+  # -- Install deps --
+  - node_install
+  # -- Pre-build steps (custom) --
+  - << parameters.pre_steps >>
+  # -- Lint --
+  - node_lint:
+      lint_command: << parameters.lint_command >>
+  # -- Build --
+  - node_build:
+      build_command: << parameters.build_command >>
+  # -- Test --
+  - node_test:
+      test_command: << parameters.test_command >>
+      install_playwright: << parameters.install_playwright >>
+  # -- Pre-publish security scanning --
+  - when:
+      condition: << parameters.run_security_scan >>
+      steps:
+        - run_gitleaks
+        - docker_build_local:
+            image_name: << parameters.image_name >>
+            image_tag: << parameters.image_tag >>
+            deploy_branches: << parameters.deploy_branches >>
+        - run_trivy:
+            image_name: << parameters.image_name >>
+            image_tag: << parameters.image_tag >>
+            deploy_branches: << parameters.deploy_branches >>
+            severity: << parameters.trivy_severity >>
+        - collect_security_reports
+  # -- Docker multi-arch publish (LAST -- only after all checks pass) --
+  - docker_buildx_push:
+      image_name: << parameters.image_name >>
+      image_tag: << parameters.image_tag >>
+      deploy_branches: << parameters.deploy_branches >>
+      push_latest: << parameters.push_latest >>
+      docker_platforms: << parameters.docker_platforms >>

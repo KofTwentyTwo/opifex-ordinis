@@ -1,0 +1,39 @@
+description: >
+  Build and push a multi-arch Docker image using buildx + QEMU. Only
+  executes on deploy branches; skips gracefully on other branches. Sets
+  up QEMU emulation, creates a buildx builder, authenticates to GHCR,
+  and pushes to all configured platforms. Requires GHCR_USERNAME and
+  GHCR_TOKEN in the CircleCI context.
+parameters:
+  image_name:
+    type: string
+    default: ""
+    description: >
+      Docker image name (e.g., ghcr.io/org/repo). Defaults to
+      ghcr.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.
+  image_tag:
+    type: string
+    default: ""
+    description: Docker image tag. Defaults to first 7 chars of CIRCLE_SHA1.
+  deploy_branches:
+    type: string
+    default: "main"
+    description: Comma-separated branches that trigger build + push.
+  push_latest:
+    type: boolean
+    default: true
+    description: Also push the latest tag on the first listed deploy branch.
+  docker_platforms:
+    type: string
+    default: "linux/amd64,linux/arm64"
+    description: Buildx target platforms.
+steps:
+  - run:
+      name: Docker buildx build + push
+      environment:
+        PARAM_IMAGE_NAME: << parameters.image_name >>
+        PARAM_IMAGE_TAG: << parameters.image_tag >>
+        PARAM_DEPLOY_BRANCHES: << parameters.deploy_branches >>
+        PARAM_PUSH_LATEST: << parameters.push_latest >>
+        PARAM_DOCKER_PLATFORMS: << parameters.docker_platforms >>
+      command: << include(scripts/docker_buildx_push.sh) >>

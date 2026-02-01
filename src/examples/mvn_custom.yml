@@ -1,0 +1,15 @@
+description: >
+  Java/Maven pipeline with overrides. Demonstrates fullstack projects
+  with Node.js frontend and multi-branch deployment.
+usage:
+  version: 2.1
+  orbs:
+    oo: kof22/opifex-ordinis@1
+  workflows:
+    default:
+      jobs:
+        - oo/mvn_pipeline:
+            context: ghcr
+            java_version: "21"
+            install_node: true
+            deploy_branches: "main,develop,staging"

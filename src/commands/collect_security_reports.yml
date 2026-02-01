@@ -1,0 +1,12 @@
+description: >
+  Aggregate Gitleaks, Trivy, and OWASP security scan reports into a single
+  directory and store as CircleCI artifacts. Reports are collected from /tmp
+  where each scanner writes its output.
+steps:
+  - run:
+      name: Collect security reports
+      command: << include(scripts/collect_security_reports.sh) >>
+      when: always
+  - store_artifacts:
+      path: /tmp/circleci/security-reports
+      destination: security-reports

@@ -1,0 +1,12 @@
+---
+
+version: 2.1
+
+description: >
+    General-purpose CircleCI orb for K8s-based projects. Provides single
+    pipeline jobs for Node.js and Java/Maven that handle build, test,
+    Docker multi-arch (buildx+QEMU), GHCR push, and security scanning.
+
+display:
+  home_url: "https://github.com/KofTwentyTwo/opifex-ordinis"
+  source_url: "https://github.com/KofTwentyTwo/opifex-ordinis"

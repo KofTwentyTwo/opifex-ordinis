@@ -1,0 +1,13 @@
+description: >
+  Minimal Node.js pipeline. Uses all defaults: Node 22, npm run lint,
+  npm run build, npm test, multi-arch Docker push on main, Gitleaks + Trivy.
+  Requires a ghcr context with GHCR_USERNAME and GHCR_TOKEN.
+usage:
+  version: 2.1
+  orbs:
+    oo: kof22/opifex-ordinis@1
+  workflows:
+    default:
+      jobs:
+        - oo/node_pipeline:
+            context: ghcr

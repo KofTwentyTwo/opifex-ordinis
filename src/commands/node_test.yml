@@ -1,0 +1,32 @@
+description: >
+  Run tests with optional Playwright browser installation. Stores
+  JUnit-format test results and Playwright report as CircleCI artifacts.
+parameters:
+  test_command:
+    type: string
+    default: "npm test"
+    description: Test command to execute.
+  install_playwright:
+    type: boolean
+    default: false
+    description: Install Playwright browsers before running tests.
+steps:
+  - when:
+      condition: << parameters.install_playwright >>
+      steps:
+        - run:
+            name: Install Playwright browsers
+            command: npx playwright install --with-deps
+  - run:
+      name: Run tests
+      environment:
+        PARAM_TEST_COMMAND: << parameters.test_command >>
+      command: << include(scripts/node_test.sh) >>
+  - store_test_results:
+      path: test-results
+  - store_artifacts:
+      path: test-results
+      destination: test-results
+  - store_artifacts:
+      path: playwright-report
+      destination: playwright-report
