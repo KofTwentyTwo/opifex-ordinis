@@ -1,0 +1,3 @@
+target/
+*.packed.yml
+.DS_Store

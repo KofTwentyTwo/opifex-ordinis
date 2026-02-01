@@ -1,0 +1,23 @@
+description: >
+  Run OWASP Dependency-Check CVE scanning for Maven projects. Scans
+  dependencies against the NVD database with retry logic for intermittent
+  failures. Caches the NVD database between runs (weekly refresh) to avoid
+  repeated downloads. Writes JSON and HTML reports for artifact storage.
+  Optionally uses NVD_API_KEY for faster database updates.
+steps:
+  - run:
+      name: Generate OWASP cache key
+      command: date +%Y-%U > /tmp/owasp-cache-key
+  - restore_cache:
+      keys:
+        - owasp-db-v1-{{ checksum "/tmp/owasp-cache-key" }}
+        - owasp-db-v1-
+  - run:
+      name: OWASP Dependency-Check
+      command: << include(scripts/run_owasp_dependency_check.sh) >>
+      no_output_timeout: 30m
+  - save_cache:
+      key: owasp-db-v1-{{ checksum "/tmp/owasp-cache-key" }}
+      paths:
+        - ~/.owasp/data
+      when: always

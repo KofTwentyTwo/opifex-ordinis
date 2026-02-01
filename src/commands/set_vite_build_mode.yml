@@ -1,0 +1,25 @@
+description: >
+  Set VITE_BUILD_MODE environment variable for fullstack projects with
+  a Vite frontend build phase. When mode is "auto", maps the current
+  branch to a build mode -- the first deploy branch (typically main)
+  maps to "production", other deploy branches use their branch name,
+  and non-deploy branches default to "production". The variable is
+  exported via BASH_ENV for all subsequent steps.
+parameters:
+  mode:
+    type: string
+    default: "auto"
+    description: >
+      Vite build mode. "auto" for branch-based mapping, or a specific
+      value (e.g. "production", "staging") for all branches.
+  deploy_branches:
+    type: string
+    default: "main"
+    description: Comma-separated deploy branches (used by auto mode).
+steps:
+  - run:
+      name: Set VITE_BUILD_MODE
+      environment:
+        PARAM_MODE: << parameters.mode >>
+        PARAM_DEPLOY_BRANCHES: << parameters.deploy_branches >>
+      command: << include(scripts/set_vite_build_mode.sh) >>

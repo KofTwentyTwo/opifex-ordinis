@@ -1,0 +1,27 @@
+description: >
+  Build a local single-arch Docker image for pre-publish scanning.
+  Only runs on deploy branches. The image is built locally (not pushed)
+  so security tools like Trivy can scan it before the multi-arch
+  publish. Exports OO_IMAGE_NAME and OO_IMAGE_TAG via BASH_ENV for
+  downstream steps.
+parameters:
+  image_name:
+    type: string
+    default: ""
+    description: Docker image name. Defaults to ghcr.io/org/repo.
+  image_tag:
+    type: string
+    default: ""
+    description: Docker image tag. Defaults to short SHA.
+  deploy_branches:
+    type: string
+    default: "main"
+    description: Comma-separated deploy branches.
+steps:
+  - run:
+      name: Build local Docker image for scanning
+      environment:
+        PARAM_IMAGE_NAME: << parameters.image_name >>
+        PARAM_IMAGE_TAG: << parameters.image_tag >>
+        PARAM_DEPLOY_BRANCHES: << parameters.deploy_branches >>
+      command: << include(scripts/docker_build_local.sh) >>

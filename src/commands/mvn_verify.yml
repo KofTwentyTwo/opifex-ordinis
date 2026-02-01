@@ -1,0 +1,31 @@
+description: >
+  Run Maven verify phase (compile, test, package) with JaCoCo coverage
+  and test result collection. Stores JUnit XML results and JaCoCo HTML
+  reports as CircleCI artifacts.
+parameters:
+  maven_args:
+    type: string
+    default: ""
+    description: Extra Maven arguments passed to the verify phase.
+steps:
+  - run:
+      name: Maven verify
+      environment:
+        PARAM_MAVEN_ARGS: << parameters.maven_args >>
+      command: << include(scripts/mvn_verify.sh) >>
+  - run:
+      name: Collect JaCoCo reports
+      command: << include(scripts/collect_jacoco_reports.sh) >>
+      when: always
+  - run:
+      name: Collect test results
+      command: << include(scripts/collect_test_results.sh) >>
+      when: always
+  - store_test_results:
+      path: /tmp/circleci/test-results
+  - store_artifacts:
+      path: /tmp/circleci/test-results
+      destination: test-results
+  - store_artifacts:
+      path: /tmp/circleci/jacoco
+      destination: jacoco

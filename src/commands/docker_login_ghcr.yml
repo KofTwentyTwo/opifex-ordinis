@@ -1,0 +1,8 @@
+description: >
+  Authenticate to GitHub Container Registry. Standalone command for custom
+  workflows. The docker_buildx_push command handles GHCR login internally.
+  Requires GHCR_USERNAME and GHCR_TOKEN in the CircleCI context.
+steps:
+  - run:
+      name: Login to GHCR
+      command: << include(scripts/docker_login_ghcr.sh) >>

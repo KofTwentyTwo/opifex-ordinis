@@ -1,0 +1,25 @@
+description: >
+  Install Eclipse Temurin JDK and Maven on the machine executor.
+  Optionally installs Node.js for fullstack projects that have a
+  frontend build step (e.g., frontend-maven-plugin).
+parameters:
+  java_version:
+    type: string
+    default: "21"
+    description: Temurin JDK major version.
+  install_node:
+    type: boolean
+    default: false
+    description: Also install Node.js alongside Java.
+  node_version:
+    type: string
+    default: "22"
+    description: Node.js major version (only used if install_node is true).
+steps:
+  - run:
+      name: Install Java << parameters.java_version >>
+      environment:
+        PARAM_JAVA_VERSION: << parameters.java_version >>
+        PARAM_INSTALL_NODE: << parameters.install_node >>
+        PARAM_NODE_VERSION: << parameters.node_version >>
+      command: << include(scripts/install_java.sh) >>

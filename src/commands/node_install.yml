@@ -1,0 +1,15 @@
+description: >
+  Install npm dependencies using npm ci with caching. Restores cache
+  using package-lock.json checksum to accelerate subsequent builds.
+steps:
+  - restore_cache:
+      keys:
+        - npm-deps-v1-{{ checksum "package-lock.json" }}
+        - npm-deps-v1-
+  - run:
+      name: Install npm dependencies
+      command: << include(scripts/node_install.sh) >>
+  - save_cache:
+      key: npm-deps-v1-{{ checksum "package-lock.json" }}
+      paths:
+        - node_modules

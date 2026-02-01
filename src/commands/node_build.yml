@@ -1,0 +1,12 @@
+description: >
+  Run the project's build command (e.g., Next.js, Vite, Webpack).
+  Defaults to npm run build but can be overridden for custom setups.
+parameters:
+  build_command:
+    type: string
+    default: "npm run build"
+    description: Build command to execute.
+steps:
+  - run:
+      name: Build
+      command: << parameters.build_command >>

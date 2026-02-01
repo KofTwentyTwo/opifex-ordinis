@@ -1,0 +1,8 @@
+description: >
+  Run Gitleaks secret detection scan. Scans the repository for hardcoded
+  secrets and writes a JSON report for artifact storage. Runs on all
+  branches and does not fail the build.
+steps:
+  - run:
+      name: Gitleaks scan
+      command: << include(scripts/run_gitleaks.sh) >>

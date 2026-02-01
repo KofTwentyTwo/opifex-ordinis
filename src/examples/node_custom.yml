@@ -1,0 +1,16 @@
+description: >
+  Node.js pipeline with overrides. Demonstrates Playwright browser testing,
+  custom test command, and multi-branch deployment.
+usage:
+  version: 2.1
+  orbs:
+    oo: kof22/opifex-ordinis@1
+  workflows:
+    default:
+      jobs:
+        - oo/node_pipeline:
+            context: ghcr
+            node_version: "22"
+            install_playwright: true
+            test_command: "npm run test:chromium"
+            deploy_branches: "main,staging"

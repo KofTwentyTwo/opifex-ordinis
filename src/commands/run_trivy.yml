@@ -1,0 +1,31 @@
+description: >
+  Run Trivy container image vulnerability scan. Only executes on deploy
+  branches (matching docker_buildx_push behavior). Scans the pushed image
+  for known CVEs filtered by severity. Writes a JSON report for artifact
+  storage.
+parameters:
+  image_name:
+    type: string
+    default: ""
+    description: Docker image name. Falls back to OO_IMAGE_NAME set by docker_buildx_push.
+  image_tag:
+    type: string
+    default: ""
+    description: Docker image tag. Falls back to OO_IMAGE_TAG set by docker_buildx_push.
+  deploy_branches:
+    type: string
+    default: "main"
+    description: Comma-separated branches that trigger the scan.
+  severity:
+    type: string
+    default: "CRITICAL,HIGH"
+    description: Trivy severity filter (e.g., CRITICAL,HIGH,MEDIUM).
+steps:
+  - run:
+      name: Trivy container scan
+      environment:
+        PARAM_IMAGE_NAME: << parameters.image_name >>
+        PARAM_IMAGE_TAG: << parameters.image_tag >>
+        PARAM_DEPLOY_BRANCHES: << parameters.deploy_branches >>
+        PARAM_TRIVY_SEVERITY: << parameters.severity >>
+      command: << include(scripts/run_trivy.sh) >>

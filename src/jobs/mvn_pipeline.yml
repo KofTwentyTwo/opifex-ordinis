@@ -1,0 +1,134 @@
+description: >
+  Complete Java/Maven CI/CD pipeline in a single job. Installs Temurin
+  JDK + Maven, runs checkstyle/compile/verify with JaCoCo coverage,
+  then conditionally pushes a multi-arch Docker image to GHCR on deploy
+  branches. Includes Gitleaks, OWASP, and Trivy security scanning.
+  Requires a ghcr context with GHCR_USERNAME and GHCR_TOKEN.
+executor:
+  name: machine
+  resource_class: << parameters.resource_class >>
+parameters:
+  java_version:
+    type: string
+    default: "21"
+    description: Temurin JDK version.
+  install_node:
+    type: boolean
+    default: false
+    description: Install Node.js (for frontend projects).
+  node_version:
+    type: string
+    default: "22"
+    description: Node.js version (if install_node is true).
+  image_name:
+    type: string
+    default: ""
+    description: >
+      Docker image name (e.g. ghcr.io/org/repo). Defaults to
+      ghcr.io/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.
+  image_tag:
+    type: string
+    default: ""
+    description: Docker image tag. Defaults to first 7 chars of CIRCLE_SHA1.
+  deploy_branches:
+    type: string
+    default: "main"
+    description: Comma-separated branches that trigger Docker push.
+  push_latest:
+    type: boolean
+    default: true
+    description: Also push the latest tag on the first deploy branch.
+  maven_args:
+    type: string
+    default: ""
+    description: Extra Maven arguments (e.g. -DVITE_BUILD_MODE=production).
+  vite_build_mode:
+    type: string
+    default: ""
+    description: >
+      Vite build mode for fullstack projects. Set to "auto" to map the
+      branch to a mode (first deploy branch -> production, other deploy
+      branches use their name, non-deploy branches -> production). Set
+      to a specific value for all branches. Leave empty to skip.
+  run_checkstyle:
+    type: boolean
+    default: true
+    description: Run Checkstyle validation.
+  docker_platforms:
+    type: string
+    default: "linux/amd64,linux/arm64"
+    description: Buildx target platforms.
+  run_security_scan:
+    type: boolean
+    default: true
+    description: Run Gitleaks + OWASP + Trivy scans.
+  trivy_severity:
+    type: string
+    default: "CRITICAL,HIGH"
+    description: Trivy severity filter.
+  pre_steps:
+    type: steps
+    default: []
+    description: >
+      Custom steps to run after checkout and runtime installation but
+      before the build. Use this to set environment variables, install
+      extra tools, or perform any project-specific setup. Variables
+      exported via BASH_ENV are available to all subsequent steps.
+  resource_class:
+    type: string
+    default: large
+    description: Machine resource class.
+steps:
+  # -- Checkout --
+  - full_checkout
+  # -- Install JDK + Maven (+ optional Node.js) --
+  - install_java:
+      java_version: << parameters.java_version >>
+      install_node: << parameters.install_node >>
+      node_version: << parameters.node_version >>
+  # -- Maven settings --
+  - setup_maven_settings
+  # -- Set VITE_BUILD_MODE (fullstack projects) --
+  - when:
+      condition: << parameters.vite_build_mode >>
+      steps:
+        - set_vite_build_mode:
+            mode: << parameters.vite_build_mode >>
+            deploy_branches: << parameters.deploy_branches >>
+  # -- Pre-build steps (custom) --
+  - << parameters.pre_steps >>
+  # -- Checkstyle --
+  - when:
+      condition: << parameters.run_checkstyle >>
+      steps:
+        - mvn_checkstyle:
+            maven_args: << parameters.maven_args >>
+  # -- Compile --
+  - mvn_build:
+      maven_args: << parameters.maven_args >>
+  # -- Verify (tests + package) --
+  - mvn_verify:
+      maven_args: << parameters.maven_args >>
+  # -- Pre-publish security scanning --
+  - when:
+      condition: << parameters.run_security_scan >>
+      steps:
+        - run_gitleaks
+        - run_owasp_dependency_check
+        - docker_build_local:
+            image_name: << parameters.image_name >>
+            image_tag: << parameters.image_tag >>
+            deploy_branches: << parameters.deploy_branches >>
+        - run_trivy:
+            image_name: << parameters.image_name >>
+            image_tag: << parameters.image_tag >>
+            deploy_branches: << parameters.deploy_branches >>
+            severity: << parameters.trivy_severity >>
+        - collect_security_reports
+  # -- Docker multi-arch publish (LAST -- only after all checks pass) --
+  - docker_buildx_push:
+      image_name: << parameters.image_name >>
+      image_tag: << parameters.image_tag >>
+      deploy_branches: << parameters.deploy_branches >>
+      push_latest: << parameters.push_latest >>
+      docker_platforms: << parameters.docker_platforms >>

@@ -1,0 +1,9 @@
+description: >
+  Full git checkout with tags. CircleCI's built-in checkout is shallow;
+  this fetches complete history and tags for version calculation and
+  Docker image tagging.
+steps:
+  - checkout
+  - run:
+      name: Fetch full history and tags
+      command: << include(scripts/checkout_full.sh) >>

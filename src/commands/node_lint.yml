@@ -1,0 +1,12 @@
+description: >
+  Run the project's lint command (e.g., ESLint, Prettier).
+  Defaults to npm run lint but can be overridden for custom setups.
+parameters:
+  lint_command:
+    type: string
+    default: "npm run lint"
+    description: Lint command to execute.
+steps:
+  - run:
+      name: Lint
+      command: << parameters.lint_command >>
